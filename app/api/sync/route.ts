@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { InstagramService } from "@/lib/services/instagram-service"
+import { rateLimitHandler } from "@/lib/api/rate-limit-middleware"
 
-export async function POST(request: NextRequest) {
+async function syncHandler(request: NextRequest) {
   try {
     const profile = await InstagramService.getActiveProfile()
 
@@ -30,3 +31,9 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting: 3 requests per minute
+export const POST = rateLimitHandler(syncHandler, {
+  limit: 3,
+  windowMs: 60000, // 1 minute
+})

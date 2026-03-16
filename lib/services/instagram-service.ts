@@ -12,12 +12,16 @@ import {
 } from "@/lib/db/schema"
 import { InstagramApiClient } from "@/lib/api/instagram-client"
 import { eq, desc, and, sql } from "drizzle-orm"
+import { encrypt, decrypt } from "@/lib/utils/crypto"
 
 export class InstagramService {
   private client: InstagramApiClient
+  private decryptedAccessToken: string
 
-  constructor(accessToken: string) {
-    this.client = new InstagramApiClient(accessToken)
+  constructor(encryptedAccessToken: string) {
+    // Decrypt the token before using it
+    this.decryptedAccessToken = decrypt(encryptedAccessToken)
+    this.client = new InstagramApiClient(this.decryptedAccessToken)
   }
 
   async syncProfileData(profileId: number): Promise<void> {
@@ -159,9 +163,15 @@ export class InstagramService {
       tokenExpiresAt?: Date
     }
   ): Promise<InstagramProfile> {
+    // Encrypt the access token before storing
+    const encryptedToken = encrypt(data.accessToken)
+
     const [profile] = await db
       .insert(instagramProfiles)
-      .values(data as NewInstagramProfile)
+      .values({
+        ...data,
+        accessToken: encryptedToken,
+      } as NewInstagramProfile)
       .returning()
 
     return profile
@@ -171,9 +181,16 @@ export class InstagramService {
     id: number,
     data: Partial<NewInstagramProfile>
   ): Promise<InstagramProfile | null> {
+    // If accessToken is being updated, encrypt it
+    const updateData: Partial<NewInstagramProfile> = { ...data }
+
+    if (data.accessToken) {
+      updateData.accessToken = encrypt(data.accessToken)
+    }
+
     const [profile] = await db
       .update(instagramProfiles)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...updateData, updatedAt: new Date() })
       .where(eq(instagramProfiles.id, id))
       .returning()
 

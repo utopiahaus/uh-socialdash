@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Settings as SettingsIcon, Instagram, Database } from "lucide-react"
+import { Settings as SettingsIcon, Instagram, Database, Key, RefreshCw } from "lucide-react"
 
 export default function SettingsPage() {
   return (
@@ -29,9 +29,42 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-2">
             <Label>Data Refresh Frequency</Label>
-            <p className="text-sm text-muted-foreground">Daily at 2:00 AM</p>
+            <p className="text-sm text-muted-foreground">Daily at 2:00 AM UTC</p>
           </div>
-          <Button>Reconnect Account</Button>
+          <div className="space-y-2">
+            <Label>Token Status</Label>
+            <p className="text-sm text-muted-foreground">
+              Active (expires in 58 days)
+            </p>
+          </div>
+          <Button variant="outline">Reconnect Account</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Token Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Auto-Refresh</Label>
+            <p className="text-sm text-muted-foreground">
+              Tokens are automatically refreshed 7 days before expiration
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Last Refresh Check</Label>
+            <p className="text-sm text-muted-foreground">
+              Today at 3:00 AM UTC
+            </p>
+          </div>
+          <Button variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh Tokens Now
+          </Button>
         </CardContent>
       </Card>
 
@@ -53,7 +86,10 @@ export default function SettingsPage() {
               {new Date().toLocaleString()}
             </p>
           </div>
-          <Button variant="outline">Sync Now</Button>
+          <Button variant="outline" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Sync Data Now
+          </Button>
         </CardContent>
       </Card>
     </div>

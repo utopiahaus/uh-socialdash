@@ -1,10 +1,12 @@
 import cron from "node-cron"
 import { InstagramService } from "@/lib/services/instagram-service"
+import { tokenRefreshService } from "@/lib/services/token-refresh-service"
 import { instagramProfiles } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { db } from "@/lib/db"
 
 let syncJob: cron.ScheduledTask | null = null
+let tokenRefreshJob: cron.ScheduledTask | null = null
 
 export async function startInstagramSyncScheduler() {
   if (syncJob) {
@@ -52,11 +54,59 @@ export async function startInstagramSyncScheduler() {
   console.log("Instagram sync scheduler started")
 }
 
+export async function startTokenRefreshScheduler() {
+  if (tokenRefreshJob) {
+    console.log("Token refresh scheduler already running")
+    return
+  }
+
+  // Run every day at 3 AM (after data sync)
+  tokenRefreshJob = cron.schedule(
+    "0 3 * * *",
+    async () => {
+      console.log("Checking for tokens to refresh...")
+
+      try {
+        const result = await tokenRefreshService.refreshExpiredTokens()
+
+        console.log(
+          `Token refresh completed: ${result.refreshed} refreshed, ${result.failed} failed, ${result.checked} checked`
+        )
+
+        // Alert if any tokens failed to refresh
+        if (result.failed > 0) {
+          console.warn(
+            `⚠️  Warning: ${result.failed} profile(s) failed to refresh and were marked inactive`
+          )
+
+          // TODO: Send notification to admin
+        }
+      } catch (error) {
+        console.error("Token refresh error:", error)
+      }
+    },
+    {
+      scheduled: true,
+      timezone: "UTC",
+    }
+  )
+
+  console.log("Token refresh scheduler started")
+}
+
 export function stopInstagramSyncScheduler() {
   if (syncJob) {
     syncJob.stop()
     syncJob = null
     console.log("Instagram sync scheduler stopped")
+  }
+}
+
+export function stopTokenRefreshScheduler() {
+  if (tokenRefreshJob) {
+    tokenRefreshJob.stop()
+    tokenRefreshJob = null
+    console.log("Token refresh scheduler stopped")
   }
 }
 

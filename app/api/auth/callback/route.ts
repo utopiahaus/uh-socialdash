@@ -4,8 +4,9 @@ import { InstagramService } from "@/lib/services/instagram-service"
 import { instagramProfiles } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { db } from "@/lib/db"
+import { rateLimitHandler } from "@/lib/api/rate-limit-middleware"
 
-export async function GET(request: NextRequest) {
+async function oauthCallbackHandler(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get("code")
   const error = searchParams.get("error")
@@ -88,3 +89,9 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+// Apply rate limiting: 5 requests per minute to prevent OAuth abuse
+export const GET = rateLimitHandler(oauthCallbackHandler, {
+  limit: 5,
+  windowMs: 60000,
+})

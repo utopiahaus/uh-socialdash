@@ -34,7 +34,7 @@ export const instagramProfiles = pgTable(
     biography: text("biography"),
     websiteUrl: text("website_url"),
     isActive: boolean("is_active").default(true).notNull(),
-    accessToken: text("access_token"),
+    accessToken: text("access_token"), // AES-256-GCM encrypted token
     tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
